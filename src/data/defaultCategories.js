@@ -1,0 +1,16 @@
+export const defaultCategories = [
+  { id: 'cat-01', nome: 'Alimentação',   icone: '🍽️', cor: '#EF4444', tipo: 'DESPESA' },
+  { id: 'cat-02', nome: 'Moradia',       icone: '🏠', cor: '#F97316', tipo: 'DESPESA' },
+  { id: 'cat-03', nome: 'Transporte',    icone: '🚗', cor: '#EAB308', tipo: 'DESPESA' },
+  { id: 'cat-04', nome: 'Saúde',         icone: '💊', cor: '#EC4899', tipo: 'DESPESA' },
+  { id: 'cat-05', nome: 'Educação',      icone: '📚', cor: '#8B5CF6', tipo: 'DESPESA' },
+  { id: 'cat-06', nome: 'Lazer',         icone: '🎉', cor: '#06B6D4', tipo: 'DESPESA' },
+  { id: 'cat-07', nome: 'Roupas',        icone: '👗', cor: '#F43F5E', tipo: 'DESPESA' },
+  { id: 'cat-08', nome: 'Tecnologia',    icone: '💻', cor: '#6366F1', tipo: 'DESPESA' },
+  { id: 'cat-09', nome: 'Assinaturas',   icone: '📱', cor: '#14B8A6', tipo: 'DESPESA' },
+  { id: 'cat-10', nome: 'Outros gastos', icone: '📦', cor: '#6B7280', tipo: 'DESPESA' },
+  { id: 'cat-11', nome: 'Salário',       icone: '💰', cor: '#22C55E', tipo: 'RECEITA' },
+  { id: 'cat-12', nome: 'Freelance',     icone: '💼', cor: '#10B981', tipo: 'RECEITA' },
+  { id: 'cat-13', nome: 'Investimentos', icone: '📈', cor: '#0EA5E9', tipo: 'RECEITA' },
+  { id: 'cat-14', nome: 'Outras rendas', icone: '🎁', cor: '#84CC16', tipo: 'RECEITA' },
+]
