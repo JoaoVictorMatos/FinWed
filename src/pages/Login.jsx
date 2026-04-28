@@ -4,6 +4,7 @@ import { Heart } from 'lucide-react'
 import { useAuthStore } from '../store/useAuthStore'
 import Input from '../components/ui/Input'
 import Button from '../components/ui/Button'
+import Modal from '../components/ui/Modal'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -11,6 +12,9 @@ export default function Login() {
   const [form, setForm] = useState({ email: '', senha: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [recoverModal, setRecoverModal] = useState(false)
+  const [recoverEmail, setRecoverEmail] = useState('')
+  const [recoverResult, setRecoverResult] = useState(null)
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }))
 
@@ -25,6 +29,18 @@ export default function Login() {
       setError(err.message)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleRecover = (e) => {
+    e.preventDefault()
+    const users = JSON.parse(localStorage.getItem('finwed_users') || '[]')
+    const found = users.find((u) => u.email === recoverEmail)
+    if (found) {
+      setRecoverResult({ success: true, message: `Sua senha é: ${found.senha}` })
+      setForm((f) => ({ ...f, email: found.email, senha: found.senha }))
+    } else {
+      setRecoverResult({ success: false, message: 'E-mail não encontrado no sistema.' })
     }
   }
 
@@ -51,14 +67,25 @@ export default function Login() {
             onChange={set('email')}
             required
           />
-          <Input
-            label="Senha"
-            type="password"
-            placeholder="••••••••"
-            value={form.senha}
-            onChange={set('senha')}
-            required
-          />
+          <div>
+            <Input
+              label="Senha"
+              type="password"
+              placeholder="••••••••"
+              value={form.senha}
+              onChange={set('senha')}
+              required
+            />
+            <div className="flex justify-end mt-1">
+              <button 
+                type="button" 
+                onClick={() => { setRecoverModal(true); setRecoverResult(null); setRecoverEmail(form.email) }} 
+                className="text-xs text-primary-600 hover:underline"
+              >
+                Esqueci a senha
+              </button>
+            </div>
+          </div>
 
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-sm text-red-600">
@@ -83,6 +110,32 @@ export default function Login() {
           <strong>Demo:</strong> cadastre-se para testar — os dados ficam no navegador.
         </div>
       </div>
+
+      <Modal open={recoverModal} onClose={() => setRecoverModal(false)} title="Recuperar senha">
+        <form onSubmit={handleRecover} className="space-y-4">
+          <p className="text-sm text-gray-600">Como esta é uma versão demo (local), insira seu e-mail para exibir a senha salva no navegador.</p>
+          <Input 
+            label="E-mail cadastrado" 
+            type="email" 
+            placeholder="seu@email.com" 
+            value={recoverEmail} 
+            onChange={(e) => setRecoverEmail(e.target.value)} 
+            required 
+          />
+          {recoverResult && (
+            <div className={`p-3 rounded-lg text-sm ${recoverResult.success ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+              {recoverResult.success && <strong>Senha encontrada: </strong>}
+              {recoverResult.message}
+            </div>
+          )}
+          <div className="flex gap-3 pt-2">
+            <Button type="button" variant="secondary" onClick={() => setRecoverModal(false)} className="flex-1">
+              {recoverResult?.success ? 'Fechar' : 'Cancelar'}
+            </Button>
+            {!recoverResult?.success && <Button type="submit" className="flex-1">Buscar senha</Button>}
+          </div>
+        </form>
+      </Modal>
     </div>
   )
 }

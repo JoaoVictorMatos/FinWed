@@ -7,6 +7,7 @@ import { useCategoryStore } from '../store/useCategoryStore'
 import { formatCurrency, getMonthYear, monthName } from '../utils/formatters'
 import Button from '../components/ui/Button'
 import Input from '../components/ui/Input'
+import CurrencyInput from '../components/ui/CurrencyInput'
 import Select from '../components/ui/Select'
 import Modal from '../components/ui/Modal'
 import Card from '../components/ui/Card'
@@ -39,7 +40,7 @@ function BudgetForm({ initial, categories, onSave, onClose, usedCatIds }) {
         <option value="">Selecione...</option>
         {available.map((c) => <option key={c.id} value={c.id}>{c.icone} {c.nome}</option>)}
       </Select>
-      <Input label="Limite mensal (R$)" type="number" min="0.01" step="0.01" placeholder="0,00"
+      <CurrencyInput label="Limite mensal (R$)" placeholder="0,00"
         value={form.valorLimite} onChange={set('valorLimite')} required />
       {error && <p className="text-sm text-red-500">{error}</p>}
       <div className="flex gap-3 pt-2">
@@ -201,7 +202,7 @@ export default function Budgets() {
                       <p className="text-xs text-gray-400">Limite: {formatCurrency(b.valorLimite)}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1">
+                  <div className="flex flex-wrap items-center justify-end gap-1 mt-2 sm:mt-0">
                     {isOver && <Badge variant="red"><AlertTriangle size={10} /> Excedido</Badge>}
                     {isAlert && <Badge variant="yellow"><AlertTriangle size={10} /> Atenção</Badge>}
                     {!isOver && !isAlert && pct > 0 && <Badge variant="green"><CheckCircle size={10} /> OK</Badge>}

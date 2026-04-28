@@ -5,6 +5,7 @@ import { useGoalStore } from '../store/useGoalStore'
 import { formatCurrency, formatDateInput } from '../utils/formatters'
 import Button from '../components/ui/Button'
 import Input from '../components/ui/Input'
+import CurrencyInput from '../components/ui/CurrencyInput'
 import Modal from '../components/ui/Modal'
 import Card from '../components/ui/Card'
 import ProgressBar from '../components/ui/ProgressBar'
@@ -26,8 +27,8 @@ function GoalForm({ onSave, onClose }) {
     <form onSubmit={handleSubmit} className="space-y-4">
       <Input label="Nome da meta" placeholder="Ex: Viagem para Europa" value={form.nome} onChange={set('nome')} required />
       <Input label="Descrição (opcional)" placeholder="Detalhes sobre a meta..." value={form.descricao} onChange={set('descricao')} />
-      <div className="grid grid-cols-2 gap-3">
-        <Input label="Valor alvo (R$)" type="number" min="0.01" step="0.01" placeholder="0,00" value={form.valorAlvo} onChange={set('valorAlvo')} required />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <CurrencyInput label="Valor alvo (R$)" placeholder="0,00" value={form.valorAlvo} onChange={set('valorAlvo')} required />
         <Input label="Prazo (opcional)" type="date" value={form.prazo} onChange={set('prazo')} />
       </div>
       {error && <p className="text-sm text-red-500">{error}</p>}
@@ -57,8 +58,8 @@ function ContributionForm({ goal, onSave, onClose }) {
         <p className="text-sm text-primary-700 font-medium">{goal.nome}</p>
         <p className="text-xs text-primary-500 mt-1">Faltam {formatCurrency(remaining)} para concluir</p>
       </div>
-      <div className="grid grid-cols-2 gap-3">
-        <Input label="Valor do aporte (R$)" type="number" min="0.01" step="0.01" placeholder="0,00" value={form.valor} onChange={set('valor')} required />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <CurrencyInput label="Valor do aporte (R$)" placeholder="0,00" value={form.valor} onChange={set('valor')} required />
         <Input label="Data" type="date" value={form.dataAporte} onChange={set('dataAporte')} required />
       </div>
       <Input label="Descrição (opcional)" placeholder="Ex: Economia de março" value={form.descricao} onChange={set('descricao')} />
@@ -199,7 +200,7 @@ export default function Goals() {
         <Card className="p-12 text-center">
           <Target size={40} className="text-gray-300 mx-auto mb-3" />
           <p className="text-gray-500 font-medium mb-1">Nenhuma meta ativa</p>
-          <p className="text-sm text-gray-400 mb-4">Crie metas para planejar objetivos financeiros juntos</p>
+          <p className="text-sm text-gray-400 mb-4">Crie metas para planejar seus objetivos financeiros</p>
           <Button onClick={() => setNewModalOpen(true)} variant="secondary">
             <Plus size={14} /> Criar primeira meta
           </Button>

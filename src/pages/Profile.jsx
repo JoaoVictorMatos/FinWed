@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { User, Mail, Heart, UserPlus, UserMinus, Save, Shield } from 'lucide-react'
+import { useState, useRef } from 'react'
+import { User, Mail, Heart, UserPlus, UserMinus, Save, Shield, Camera } from 'lucide-react'
 import { useAuthStore } from '../store/useAuthStore'
 import Button from '../components/ui/Button'
 import Input from '../components/ui/Input'
@@ -11,6 +11,8 @@ function ProfileSection() {
   const { user, updateProfile } = useAuthStore()
   const [form, setForm] = useState({ nome: user?.nome || '', email: user?.email || '' })
   const [saved, setSaved] = useState(false)
+  const fileInputRef = useRef(null)
+  
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }))
 
   const handleSave = (e) => {
@@ -20,6 +22,53 @@ function ProfileSection() {
     setTimeout(() => setSaved(false), 2500)
   }
 
+  const handlePhotoClick = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handlePhotoChange = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const img = new Image()
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        const MAX_SIZE = 200
+        let width = img.width
+        let height = img.height
+
+        if (width > height) {
+          if (width > MAX_SIZE) {
+            height *= MAX_SIZE / width
+            width = MAX_SIZE
+          }
+        } else {
+          if (height > MAX_SIZE) {
+            width *= MAX_SIZE / height
+            height = MAX_SIZE
+          }
+        }
+
+        canvas.width = width
+        canvas.height = height
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(img, 0, 0, width, height)
+        
+        // compress as jpeg
+        const base64 = canvas.toDataURL('image/jpeg', 0.8)
+        try {
+          updateProfile({ avatarUrl: base64 })
+        } catch (err) {
+          alert('Erro ao salvar imagem. Ela pode ser muito grande.')
+        }
+      }
+      img.src = event.target.result
+    }
+    reader.readAsDataURL(file)
+  }
+
   return (
     <Card className="p-6">
       <div className="flex items-center gap-3 mb-5">
@@ -27,9 +76,26 @@ function ProfileSection() {
         <h2 className="font-semibold text-gray-900">Meu perfil</h2>
       </div>
       <div className="flex items-center gap-4 mb-6">
-        <div className="w-16 h-16 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold text-2xl">
-          {user?.nome?.[0]?.toUpperCase()}
+        <div 
+          onClick={handlePhotoClick}
+          className="relative w-16 h-16 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold text-2xl cursor-pointer group overflow-hidden shrink-0"
+        >
+          {user?.avatarUrl ? (
+            <img src={user.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+          ) : (
+            user?.nome?.[0]?.toUpperCase()
+          )}
+          <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <Camera size={20} className="text-white" />
+          </div>
         </div>
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          onChange={handlePhotoChange} 
+          accept="image/*" 
+          className="hidden" 
+        />
         <div>
           <p className="font-semibold text-gray-900">{user?.nome}</p>
           <p className="text-sm text-gray-400">{user?.email}</p>
@@ -49,97 +115,21 @@ function ProfileSection() {
 }
 
 function CoupleSection() {
-  const { user, casal, partner, sendInvite, dissolveCouple } = useAuthStore()
-  const [inviteEmail, setInviteEmail] = useState('')
-  const [inviteMsg, setInviteMsg] = useState('')
-  const [inviteError, setInviteError] = useState('')
-  const [dissolveModal, setDissolveModal] = useState(false)
-
-  const handleInvite = (e) => {
-    e.preventDefault()
-    setInviteMsg('')
-    setInviteError('')
-    try {
-      sendInvite(inviteEmail)
-      setInviteMsg(`Convite enviado para ${inviteEmail}. Peça ao seu parceiro(a) para criar uma conta com este e-mail.`)
-      setInviteEmail('')
-    } catch (err) {
-      setInviteError(err.message)
-    }
-  }
-
-  const handleDissolve = () => {
-    dissolveCouple()
-    setDissolveModal(false)
-  }
-
   return (
-    <Card className="p-6">
+    <Card className="p-6 opacity-75">
       <div className="flex items-center gap-3 mb-5">
         <Heart size={18} className="text-primary-600" />
         <h2 className="font-semibold text-gray-900">Gestão do casal</h2>
       </div>
 
-      {casal && partner ? (
-        <div className="space-y-4">
-          <div className="flex items-center gap-4 p-4 bg-primary-50 rounded-xl">
-            <div className="w-12 h-12 rounded-full bg-primary-200 flex items-center justify-center text-primary-700 font-bold text-lg">
-              {partner.nome?.[0]?.toUpperCase()}
-            </div>
-            <div className="flex-1">
-              <p className="font-semibold text-primary-900">{partner.nome}</p>
-              <p className="text-sm text-primary-600">{partner.email}</p>
-              <Badge variant="green" className="mt-1">✓ Casal ativo</Badge>
-            </div>
-          </div>
-          <div className="text-sm text-gray-500 bg-gray-50 rounded-lg p-3">
-            <p>Vocês estão conectados desde <strong>{new Date(casal.criadoEm).toLocaleDateString('pt-BR')}</strong>.</p>
-            <p className="mt-1">Transações compartilhadas e orçamentos são visíveis para ambos.</p>
-          </div>
-          <Button variant="danger" size="sm" onClick={() => setDissolveModal(true)}>
-            <UserMinus size={14} /> Dissolver vínculo
-          </Button>
+      <div className="space-y-4">
+        <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-600">
+          <p className="font-medium text-gray-800 mb-1 flex items-center gap-2">
+            <span>🔒</span> Em breve
+          </p>
+          <p>Esta atualização será lançada em breve. Por enquanto, o sistema oferece serviços de gestão pessoal apenas.</p>
         </div>
-      ) : (
-        <div className="space-y-4">
-          <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-xl text-sm text-yellow-800">
-            <p className="font-medium mb-1">Você ainda não tem parceiro(a) vinculado(a)</p>
-            <p>Digite o e-mail do seu parceiro(a) para enviar um convite. Ele(a) precisará criar uma conta com esse e-mail.</p>
-          </div>
-          <form onSubmit={handleInvite} className="space-y-3 max-w-sm">
-            <Input
-              label="E-mail do parceiro(a)"
-              type="email"
-              placeholder="parceiro@email.com"
-              value={inviteEmail}
-              onChange={(e) => setInviteEmail(e.target.value)}
-              required
-            />
-            {inviteError && <p className="text-sm text-red-500">{inviteError}</p>}
-            {inviteMsg && <p className="text-sm text-green-600 bg-green-50 rounded-lg p-3">{inviteMsg}</p>}
-            <Button type="submit" size="sm">
-              <UserPlus size={14} /> Enviar convite
-            </Button>
-          </form>
-        </div>
-      )}
-
-      <Modal open={dissolveModal} onClose={() => setDissolveModal(false)} title="Dissolver vínculo de casal">
-        <div className="space-y-4">
-          <div className="bg-red-50 rounded-xl p-4 text-sm text-red-700">
-            <p className="font-semibold mb-2">Atenção: ação irreversível</p>
-            <ul className="list-disc list-inside space-y-1">
-              <li>O vínculo com <strong>{partner?.nome}</strong> será desfeito</li>
-              <li>Os dados históricos serão preservados individualmente</li>
-              <li>Transações compartilhadas continuarão visíveis para cada um</li>
-            </ul>
-          </div>
-          <div className="flex gap-3">
-            <Button variant="secondary" onClick={() => setDissolveModal(false)} className="flex-1">Cancelar</Button>
-            <Button variant="danger" onClick={handleDissolve} className="flex-1">Confirmar dissolução</Button>
-          </div>
-        </div>
-      </Modal>
+      </div>
     </Card>
   )
 }

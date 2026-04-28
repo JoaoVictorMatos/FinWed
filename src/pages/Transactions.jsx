@@ -6,6 +6,7 @@ import { useCategoryStore } from '../store/useCategoryStore'
 import { formatCurrency, formatDateInput, getMonthYear } from '../utils/formatters'
 import Button from '../components/ui/Button'
 import Input from '../components/ui/Input'
+import CurrencyInput from '../components/ui/CurrencyInput'
 import Select from '../components/ui/Select'
 import Modal from '../components/ui/Modal'
 import Badge from '../components/ui/Badge'
@@ -61,12 +62,12 @@ function TransactionForm({ initial, onSave, onClose, categories }) {
         </Select>
         <Select label="Escopo" value={form.escopo} onChange={set('escopo')}>
           <option value="PESSOAL">Pessoal</option>
-          <option value="COMPARTILHADA">Compartilhada</option>
+          <option value="COMPARTILHADA" disabled>Compartilhada (Em breve)</option>
         </Select>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <Input label="Valor (R$)" type="number" min="0.01" step="0.01" placeholder="0,00" value={form.valor} onChange={set('valor')} required />
+        <CurrencyInput label="Valor (R$)" placeholder="0,00" value={form.valor} onChange={set('valor')} required />
         <Input label="Data" type="date" value={form.dataTransacao} onChange={set('dataTransacao')} required />
       </div>
 
@@ -182,8 +183,8 @@ export default function Transactions() {
 
       {/* Filters */}
       <Card className="p-4">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-          <div className="relative col-span-2 md:col-span-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+          <div className="relative col-span-1 sm:col-span-2 md:col-span-1">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               className="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-primary-500"
@@ -206,7 +207,7 @@ export default function Transactions() {
           <Select value={filterEscopo} onChange={(e) => setFilterEscopo(e.target.value)}>
             <option value="">Todos os escopos</option>
             <option value="PESSOAL">Pessoal</option>
-            <option value="COMPARTILHADA">Compartilhada</option>
+            <option value="COMPARTILHADA" disabled>Compartilhada (Em breve)</option>
           </Select>
           <Select value={filterCat} onChange={(e) => setFilterCat(e.target.value)}>
             <option value="">Todas as categorias</option>
@@ -237,7 +238,7 @@ export default function Transactions() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900 truncate">{t.descricao || cat?.nome || 'Sem descrição'}</p>
-                    <div className="flex items-center gap-2 mt-0.5">
+                    <div className="flex items-center flex-wrap gap-2 mt-0.5">
                       <span className="text-xs text-gray-400">{t.dataTransacao?.split('-').reverse().join('/')}</span>
                       <Badge variant={t.escopo === 'COMPARTILHADA' ? 'blue' : 'gray'}>
                         {t.escopo === 'COMPARTILHADA' ? '👫 Compartilhada' : '👤 Pessoal'}
@@ -245,11 +246,13 @@ export default function Transactions() {
                       {cat && <Badge variant="gray">{cat.nome}</Badge>}
                     </div>
                   </div>
-                  <span className={`text-base font-bold ${t.tipo === 'RECEITA' ? 'text-green-600' : 'text-red-600'}`}>
-                    {t.tipo === 'RECEITA' ? '+' : '-'}{formatCurrency(t.valor)}
-                  </span>
+                  <div className="flex flex-col items-end shrink-0 ml-2">
+                    <span className={`text-base font-bold ${t.tipo === 'RECEITA' ? 'text-green-600' : 'text-red-600'}`}>
+                      {t.tipo === 'RECEITA' ? '+' : '-'}{formatCurrency(t.valor)}
+                    </span>
+                  </div>
                   {isOwn && (
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity mt-2 sm:mt-0">
                       <button onClick={() => openEdit(t)} className="p-1.5 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors">
                         <Pencil size={14} />
                       </button>
