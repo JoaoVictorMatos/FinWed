@@ -11,6 +11,7 @@ import Select from '../components/ui/Select'
 import Modal from '../components/ui/Modal'
 import Badge from '../components/ui/Badge'
 import Card from '../components/ui/Card'
+import { useConfirm } from '../components/ui/ConfirmDialog'
 
 const emptyForm = () => ({
   valor: '',
@@ -108,6 +109,7 @@ export default function Transactions() {
   const casalId = casal?.id || user?.id
   const categories = useMemo(() => catStore.all(casalId), [catStore.custom, casalId])
 
+  const { confirm, dialog } = useConfirm()
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState(null)
   const [search, setSearch] = useState('')
@@ -153,8 +155,8 @@ export default function Transactions() {
     setModalOpen(false)
   }
 
-  const handleDelete = (id) => {
-    if (confirm('Excluir esta transação?')) txStore.remove(id)
+  const handleDelete = async (id) => {
+    if (await confirm('Excluir esta transação?', 'Excluir')) txStore.remove(id)
   }
 
   return (
@@ -276,6 +278,7 @@ export default function Transactions() {
           onClose={() => setModalOpen(false)}
         />
       </Modal>
+      {dialog}
     </div>
   )
 }

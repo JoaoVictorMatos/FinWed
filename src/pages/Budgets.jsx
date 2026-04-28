@@ -11,6 +11,7 @@ import CurrencyInput from '../components/ui/CurrencyInput'
 import Select from '../components/ui/Select'
 import Modal from '../components/ui/Modal'
 import Card from '../components/ui/Card'
+import { useConfirm } from '../components/ui/ConfirmDialog'
 import ProgressBar from '../components/ui/ProgressBar'
 import Badge from '../components/ui/Badge'
 
@@ -58,6 +59,7 @@ export default function Budgets() {
   const catStore = useCategoryStore()
 
   const casalId = casal?.id || user?.id
+  const { confirm, dialog } = useConfirm()
   const now = new Date()
   const [selectedMes, setSelectedMes] = useState(now.getMonth() + 1)
   const [selectedAno, setSelectedAno] = useState(now.getFullYear())
@@ -89,8 +91,8 @@ export default function Budgets() {
     setEditing(null)
   }
 
-  const handleDelete = (id) => {
-    if (confirm('Excluir este orçamento?')) budgetStore.remove(id)
+  const handleDelete = async (id) => {
+    if (await confirm('Excluir este orçamento?', 'Excluir')) budgetStore.remove(id)
   }
 
   const handleCopy = () => {
@@ -242,6 +244,7 @@ export default function Budgets() {
           onClose={() => { setModalOpen(false); setEditing(null) }}
         />
       </Modal>
+      {dialog}
     </div>
   )
 }

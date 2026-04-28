@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Plus, Target, Archive, TrendingUp, Calendar, Sparkles } from 'lucide-react'
+import { Plus, Target, Archive, TrendingUp, Calendar, Sparkles, History, Trash2, User } from 'lucide-react'
 import { useAuthStore } from '../store/useAuthStore'
 import { useGoalStore } from '../store/useGoalStore'
 import { formatCurrency, formatDateInput } from '../utils/formatters'
@@ -10,6 +10,7 @@ import Modal from '../components/ui/Modal'
 import Card from '../components/ui/Card'
 import ProgressBar from '../components/ui/ProgressBar'
 import Badge from '../components/ui/Badge'
+import { useConfirm } from '../components/ui/ConfirmDialog'
 
 function GoalForm({ onSave, onClose }) {
   const [form, setForm] = useState({ nome: '', descricao: '', valorAlvo: '', prazo: '' })
@@ -72,7 +73,93 @@ function ContributionForm({ goal, onSave, onClose }) {
   )
 }
 
-function GoalCard({ goal, onContribute, onArchive, forecast }) {
+function GoalHistoryModal({ goal, contributions, onRemove, onClose, user, partner }) {
+  const { confirm: confirmRemove, dialog: removeDialog } = useConfirm()
+  const sorted = useMemo(
+    () => [...contributions].sort((a, b) => b.dataAporte.localeCompare(a.dataAporte) || b.criadoEm.localeCompare(a.criadoEm)),
+    [contributions]
+  )
+  const total = contributions.reduce((s, c) => s + c.valor, 0)
+
+  const resolveNome = (usuarioId) => {
+    if (usuarioId === user?.id) return user?.nome || 'Você'
+    if (usuarioId === partner?.id) return partner?.nome || 'Parceiro(a)'
+    return 'Usuário'
+  }
+
+  const handleRemove = async (id) => {
+    if (await confirmRemove('Remover este aporte? O valor será descontado da meta.', 'Remover')) onRemove(id)
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="bg-primary-50 rounded-xl p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs text-primary-500 font-medium uppercase tracking-wide">Meta</p>
+            <p className="text-sm font-semibold text-primary-800 mt-0.5">{goal.nome}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-xs text-primary-500 font-medium uppercase tracking-wide">Total aportado</p>
+            <p className="text-sm font-bold text-primary-700 mt-0.5">{formatCurrency(total)}</p>
+          </div>
+        </div>
+        <div className="mt-3">
+          <ProgressBar value={goal.valorAtual} max={goal.valorAlvo} />
+          <div className="flex justify-between text-xs text-primary-500 mt-1">
+            <span>{formatCurrency(goal.valorAtual)}</span>
+            <span>{formatCurrency(goal.valorAlvo)}</span>
+          </div>
+        </div>
+      </div>
+
+      {sorted.length === 0 ? (
+        <div className="py-10 text-center">
+          <History size={32} className="text-gray-300 mx-auto mb-2" />
+          <p className="text-sm text-gray-400">Nenhum aporte registrado ainda.</p>
+        </div>
+      ) : (
+        <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+          {sorted.map((c) => (
+            <div key={c.id} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors group">
+              <div className="w-8 h-8 rounded-lg bg-white border border-gray-200 flex items-center justify-center flex-shrink-0">
+                <User size={13} className="text-gray-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-500">{c.dataAporte.split('-').reverse().join('/')}</span>
+                  <span className="text-xs text-gray-300">·</span>
+                  <span className="text-xs text-gray-500 truncate">{resolveNome(c.usuarioId)}</span>
+                </div>
+                {c.descricao && (
+                  <p className="text-xs text-gray-600 mt-0.5 truncate">{c.descricao}</p>
+                )}
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <span className="text-sm font-semibold text-green-600">+{formatCurrency(c.valor)}</span>
+                <button
+                  onClick={() => handleRemove(c.id)}
+                  className="p-1 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                  title="Remover aporte"
+                >
+                  <Trash2 size={13} />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="flex items-center justify-between pt-1 border-t border-gray-100">
+        <p className="text-xs text-gray-400">{contributions.length} aporte{contributions.length !== 1 ? 's' : ''}</p>
+        <Button variant="secondary" size="sm" onClick={onClose}>Fechar</Button>
+      </div>
+      {removeDialog}
+    </div>
+  )
+}
+
+function GoalCard({ goal, onContribute, onArchive, onHistory, contributionCount, forecast }) {
   const pct = goal.valorAlvo > 0 ? (goal.valorAtual / goal.valorAlvo) * 100 : 0
   const remaining = goal.valorAlvo - goal.valorAtual
   const isNearDeadline = goal.prazo && new Date(goal.prazo) < new Date(Date.now() + 30 * 86400000)
@@ -89,11 +176,23 @@ function GoalCard({ goal, onContribute, onArchive, forecast }) {
             {goal.descricao && <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">{goal.descricao}</p>}
           </div>
         </div>
-        <button onClick={() => onArchive(goal.id)}
-          className="p-1.5 text-gray-300 hover:text-gray-500 hover:bg-gray-100 rounded-lg transition-colors"
-          title="Arquivar meta">
-          <Archive size={14} />
-        </button>
+        <div className="flex items-center gap-1">
+          <button onClick={() => onHistory(goal)}
+            className="p-1.5 text-gray-300 hover:text-primary-500 hover:bg-primary-50 rounded-lg transition-colors relative"
+            title="Ver histórico de aportes">
+            <History size={14} />
+            {contributionCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center leading-none">
+                {contributionCount > 9 ? '9+' : contributionCount}
+              </span>
+            )}
+          </button>
+          <button onClick={() => onArchive(goal.id)}
+            className="p-1.5 text-gray-300 hover:text-gray-500 hover:bg-gray-100 rounded-lg transition-colors"
+            title="Arquivar meta">
+            <Archive size={14} />
+          </button>
+        </div>
       </div>
 
       <div className="space-y-1 mb-3">
@@ -127,7 +226,7 @@ function GoalCard({ goal, onContribute, onArchive, forecast }) {
   )
 }
 
-function CompletedGoalCard({ goal }) {
+function CompletedGoalCard({ goal, onHistory, contributionCount }) {
   return (
     <Card className="p-4 bg-green-50 border-green-200">
       <div className="flex items-center gap-3">
@@ -138,19 +237,35 @@ function CompletedGoalCard({ goal }) {
           <p className="font-medium text-green-900 text-sm truncate">{goal.nome}</p>
           <p className="text-xs text-green-600">{formatCurrency(goal.valorAlvo)} — Concluída!</p>
         </div>
-        <Badge variant="green">✓ Concluída</Badge>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => onHistory(goal)}
+            className="p-1.5 text-green-400 hover:text-green-600 hover:bg-green-100 rounded-lg transition-colors relative"
+            title="Ver histórico de aportes"
+          >
+            <History size={14} />
+            {contributionCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center leading-none">
+                {contributionCount > 9 ? '9+' : contributionCount}
+              </span>
+            )}
+          </button>
+          <Badge variant="green">✓ Concluída</Badge>
+        </div>
       </div>
     </Card>
   )
 }
 
 export default function Goals() {
-  const { user, casal } = useAuthStore()
+  const { user, casal, partner } = useAuthStore()
   const goalStore = useGoalStore()
+  const { confirm, dialog } = useConfirm()
 
   const casalId = casal?.id || user?.id
   const [newModalOpen, setNewModalOpen] = useState(false)
   const [contribModal, setContribModal] = useState(null)
+  const [historyModal, setHistoryModal] = useState(null)
   const [showArchived, setShowArchived] = useState(false)
   const [successMsg, setSuccessMsg] = useState('')
 
@@ -175,9 +290,23 @@ export default function Goals() {
     }
   }
 
-  const handleArchive = (id) => {
-    if (confirm('Arquivar esta meta? Ela não aparecerá mais no dashboard.')) goalStore.archive(id)
+  const handleArchive = async (id) => {
+    if (await confirm('Arquivar esta meta? Ela não aparecerá mais no dashboard.', 'Arquivar')) goalStore.archive(id)
   }
+
+  const handleRemoveContribution = (id) => {
+    goalStore.removeContribution(id)
+  }
+
+  const historyGoalContribs = useMemo(
+    () => historyModal ? goalStore.contributionsForGoal(historyModal.id) : [],
+    [historyModal, goalStore.contributions]
+  )
+
+  const historyGoalCurrent = useMemo(
+    () => historyModal ? (goalStore.goals.find((g) => g.id === historyModal.id) || historyModal) : null,
+    [historyModal, goalStore.goals]
+  )
 
   return (
     <div className="space-y-6">
@@ -213,6 +342,8 @@ export default function Goals() {
               goal={g}
               onContribute={setContribModal}
               onArchive={handleArchive}
+              onHistory={setHistoryModal}
+              contributionCount={goalStore.contributionsForGoal(g.id).length}
               forecast={goalStore.forecastCompletion(g.id)}
             />
           ))}
@@ -224,7 +355,7 @@ export default function Goals() {
         <div>
           <h2 className="text-sm font-semibold text-gray-700 mb-3">Concluídas</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {concluded.map((g) => <CompletedGoalCard key={g.id} goal={g} />)}
+            {concluded.map((g) => <CompletedGoalCard key={g.id} goal={g} onHistory={setHistoryModal} contributionCount={goalStore.contributionsForGoal(g.id).length} />)}
           </div>
         </div>
       )}
@@ -265,6 +396,24 @@ export default function Goals() {
           <ContributionForm goal={contribModal} onSave={handleContrib} onClose={() => setContribModal(null)} />
         )}
       </Modal>
+
+      <Modal
+        open={!!historyModal}
+        onClose={() => setHistoryModal(null)}
+        title="Histórico de aportes"
+      >
+        {historyModal && historyGoalCurrent && (
+          <GoalHistoryModal
+            goal={historyGoalCurrent}
+            contributions={historyGoalContribs}
+            onRemove={handleRemoveContribution}
+            onClose={() => setHistoryModal(null)}
+            user={user}
+            partner={partner}
+          />
+        )}
+      </Modal>
+      {dialog}
     </div>
   )
 }

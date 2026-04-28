@@ -8,6 +8,7 @@ import Transactions from './pages/Transactions'
 import Budgets from './pages/Budgets'
 import Goals from './pages/Goals'
 import Profile from './pages/Profile'
+import Categories from './pages/Categories'
 
 function PrivateRoute({ children }) {
   const user = useAuthStore((s) => s.user)
@@ -32,6 +33,7 @@ export default function App() {
         <Route path="/transacoes" element={<PrivateRoute><Transactions /></PrivateRoute>} />
         <Route path="/orcamentos" element={<PrivateRoute><Budgets /></PrivateRoute>} />
         <Route path="/metas" element={<PrivateRoute><Goals /></PrivateRoute>} />
+        <Route path="/categorias" element={<PrivateRoute><Categories /></PrivateRoute>} />
         <Route path="/perfil" element={<PrivateRoute><Profile /></PrivateRoute>} />
 
         <Route path="*" element={<Navigate to="/" replace />} />

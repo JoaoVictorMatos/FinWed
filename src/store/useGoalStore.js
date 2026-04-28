@@ -47,6 +47,22 @@ export const useGoalStore = create(
 
       contributionsForGoal: (metaId) => get().contributions.filter((c) => c.metaId === metaId),
 
+      removeContribution: (id) => {
+        const contrib = get().contributions.find((c) => c.id === id)
+        if (!contrib) return
+        const goal = get().goals.find((g) => g.id === contrib.metaId)
+        if (!goal) return
+        const novoValor = Math.max(0, goal.valorAtual - contrib.valor)
+        set((s) => ({
+          contributions: s.contributions.filter((c) => c.id !== id),
+          goals: s.goals.map((g) =>
+            g.id === contrib.metaId
+              ? { ...g, valorAtual: novoValor, status: g.status === 'ARQUIVADA' ? 'ARQUIVADA' : novoValor >= g.valorAlvo ? 'CONCLUIDA' : 'ATIVA' }
+              : g
+          ),
+        }))
+      },
+
       forecastCompletion: (metaId) => {
         const goal = get().goals.find((g) => g.id === metaId)
         if (!goal || goal.valorAtual <= 0) return null

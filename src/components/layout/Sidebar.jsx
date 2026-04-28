@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, ArrowLeftRight, Target, PiggyBank, User, LogOut, Heart } from 'lucide-react'
+import { LayoutDashboard, ArrowLeftRight, Target, PiggyBank, User, LogOut, Heart, Tags } from 'lucide-react'
 import { useAuthStore } from '../../store/useAuthStore'
 
 export const navLinks = [
@@ -7,6 +7,7 @@ export const navLinks = [
   { to: '/transacoes',   icon: ArrowLeftRight,  label: 'Transações'  },
   { to: '/orcamentos',   icon: PiggyBank,       label: 'Orçamentos'  },
   { to: '/metas',        icon: Target,          label: 'Metas'       },
+  { to: '/categorias',   icon: Tags,            label: 'Categorias'  },
   { to: '/perfil',       icon: User,            label: 'Perfil'      },
 ]
 
