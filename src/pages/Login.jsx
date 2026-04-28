@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { Heart } from 'lucide-react'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { Heart, Clock } from 'lucide-react'
 import { useAuthStore } from '../store/useAuthStore'
 import Input from '../components/ui/Input'
 import Button from '../components/ui/Button'
@@ -8,6 +8,7 @@ import Modal from '../components/ui/Modal'
 
 export default function Login() {
   const navigate = useNavigate()
+  const { state: locationState } = useLocation()
   const login = useAuthStore((s) => s.login)
   const [form, setForm] = useState({ email: '', senha: '' })
   const [error, setError] = useState('')
@@ -54,6 +55,13 @@ export default function Login() {
           </div>
           <span className="text-2xl font-bold text-gray-900">FinWed</span>
         </div>
+
+        {locationState?.expired && (
+          <div className="flex items-center gap-2 bg-yellow-50 border border-yellow-200 rounded-xl px-3 py-2.5 mb-5 text-sm text-yellow-800">
+            <Clock size={15} className="shrink-0 text-yellow-600" />
+            Sessão encerrada por inatividade. Faça login novamente.
+          </div>
+        )}
 
         <h1 className="text-xl font-semibold text-gray-900 mb-1">Bem-vindo de volta</h1>
         <p className="text-sm text-gray-500 mb-6">Entre na sua conta para continuar</p>

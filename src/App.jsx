@@ -9,6 +9,7 @@ import Budgets from './pages/Budgets'
 import Goals from './pages/Goals'
 import Profile from './pages/Profile'
 import Categories from './pages/Categories'
+import ErrorPage from './pages/ErrorPage'
 
 function PrivateRoute({ children }) {
   const user = useAuthStore((s) => s.user)
@@ -36,7 +37,7 @@ export default function App() {
         <Route path="/categorias" element={<PrivateRoute><Categories /></PrivateRoute>} />
         <Route path="/perfil" element={<PrivateRoute><Profile /></PrivateRoute>} />
 
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<ErrorPage />} />
       </Routes>
     </BrowserRouter>
   )
