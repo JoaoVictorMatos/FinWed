@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { TrendingUp, TrendingDown, Wallet, ArrowRight, AlertTriangle } from 'lucide-react'
+import { TrendingUp, TrendingDown, Wallet, ArrowRight, AlertTriangle, CheckCircle2, XCircle, RotateCcw, CalendarRange, Repeat2 } from 'lucide-react'
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
   LineChart, Line, XAxis, YAxis, CartesianGrid, Legend,
@@ -10,6 +10,7 @@ import { useTransactionStore } from '../store/useTransactionStore'
 import { useBudgetStore } from '../store/useBudgetStore'
 import { useGoalStore } from '../store/useGoalStore'
 import { useCategoryStore } from '../store/useCategoryStore'
+import { usePlannedExpenseStore } from '../store/usePlannedExpenseStore'
 import { formatCurrency, getMonthYear, currentMonthLabel, last6Months, isSameMonth } from '../utils/formatters'
 import Card from '../components/ui/Card'
 import ProgressBar from '../components/ui/ProgressBar'
@@ -39,12 +40,18 @@ const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent
   return <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={11}>{`${(percent * 100).toFixed(0)}%`}</text>
 }
 
+const isOverdue = (e) => {
+  const d = new Date(); d.setHours(0, 0, 0, 0)
+  return e.status === 'PENDENTE' && new Date(e.dataVencimento + 'T00:00:00') < d
+}
+
 export default function Dashboard() {
   const { user, casal } = useAuthStore()
   const txStore = useTransactionStore()
   const budgetStore = useBudgetStore()
   const goalStore = useGoalStore()
   const catStore = useCategoryStore()
+  const plannedStore = usePlannedExpenseStore()
 
   const { mes, ano } = getMonthYear()
   const casalId = casal?.id || user?.id
@@ -85,6 +92,43 @@ export default function Dashboard() {
 
   const goals = useMemo(() => goalStore.forCouple(casalId), [goalStore.goals, casalId])
   const recentTxs = txs.slice(0, 5)
+
+  const plannedExpenses = useMemo(
+    () => plannedStore.forMonth(casalId, mes, ano)
+      .filter((e) => e.status !== 'CANCELADO')
+      .sort((a, b) => {
+        const aOver = isOverdue(a) ? 0 : 1
+        const bOver = isOverdue(b) ? 0 : 1
+        if (aOver !== bOver) return aOver - bOver
+        return a.dataVencimento.localeCompare(b.dataVencimento)
+      }),
+    [plannedStore.expenses, casalId, mes, ano]
+  )
+
+  const plannedSummary = useMemo(() => ({
+    pendente: plannedExpenses.filter((e) => e.status === 'PENDENTE').reduce((s, e) => s + e.valor, 0),
+    vencidos: plannedExpenses.filter(isOverdue).length,
+    total: plannedExpenses.length,
+  }), [plannedExpenses])
+
+  const handlePlannedPay = (id) => {
+    const expense = plannedStore.expenses.find((e) => e.id === id)
+    if (!expense) return
+    plannedStore.markAsPaid(id)
+    txStore.add({
+      tipo: 'DESPESA',
+      escopo: 'PESSOAL',
+      valor: expense.valor,
+      descricao: expense.descricao,
+      categoriaId: expense.categoriaId,
+      dataTransacao: expense.dataVencimento,
+      casalId,
+      criadoPor: user.id,
+    })
+  }
+
+  const handlePlannedCancel = (id) => plannedStore.cancel(id)
+  const handlePlannedRevert = (id) => plannedStore.revert(id)
 
   return (
     <div className="space-y-6">
@@ -227,6 +271,145 @@ export default function Dashboard() {
           )}
         </Card>
       </div>
+
+      {/* Planned expenses widget */}
+      <Card className="overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+          <div className="flex items-center gap-2">
+            <CalendarRange size={16} className="text-primary-600" />
+            <h2 className="text-sm font-semibold text-gray-700">Gastos planejados — este mês</h2>
+          </div>
+          <div className="flex items-center gap-3">
+            {plannedSummary.vencidos > 0 && (
+              <span className="flex items-center gap-1 text-xs text-red-600 font-medium">
+                <AlertTriangle size={12} />
+                {plannedSummary.vencidos} vencido{plannedSummary.vencidos > 1 ? 's' : ''}
+              </span>
+            )}
+            {plannedSummary.pendente > 0 && (
+              <span className="text-xs text-gray-500">
+                {formatCurrency(plannedSummary.pendente)} a pagar
+              </span>
+            )}
+            <Link to="/gastos" className="text-xs text-primary-600 hover:underline flex items-center gap-1">
+              Ver todos <ArrowRight size={12} />
+            </Link>
+          </div>
+        </div>
+
+        {/* List */}
+        {plannedExpenses.length === 0 ? (
+          <div className="py-10 flex flex-col items-center gap-2 text-gray-400">
+            <CalendarRange size={32} className="text-gray-200" />
+            <p className="text-sm">Nenhum gasto planejado para este mês</p>
+            <Link to="/gastos" className="text-xs text-primary-600 hover:underline mt-1">Adicionar gasto</Link>
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-50">
+            {plannedExpenses.slice(0, 6).map((expense) => {
+              const cat = categories.find((c) => c.id === expense.categoriaId)
+              const overdue = isOverdue(expense)
+              const parts = expense.dataVencimento.split('-')
+              const dayMonth = `${parts[2]}/${parts[1]}`
+
+              return (
+                <div
+                  key={expense.id}
+                  className={`flex items-center gap-3 px-5 py-3.5 group transition-colors
+                    ${overdue ? 'bg-red-50/50 hover:bg-red-50' : 'hover:bg-gray-50'}
+                    ${expense.status === 'PAGO' ? 'opacity-70' : ''}`}
+                >
+                  {/* Date pill */}
+                  <div className={`w-10 shrink-0 text-center rounded-lg py-1
+                    ${overdue ? 'bg-red-100' : expense.status === 'PAGO' ? 'bg-green-100' : 'bg-gray-100'}`}>
+                    <p className={`text-xs font-bold leading-tight
+                      ${overdue ? 'text-red-700' : expense.status === 'PAGO' ? 'text-green-700' : 'text-gray-700'}`}>
+                      {dayMonth.split('/')[0]}
+                    </p>
+                    <p className={`text-[10px] leading-tight
+                      ${overdue ? 'text-red-400' : expense.status === 'PAGO' ? 'text-green-400' : 'text-gray-400'}`}>
+                      {dayMonth.split('/')[1]}
+                    </p>
+                  </div>
+
+                  {/* Category icon */}
+                  {cat ? (
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0"
+                      style={{ backgroundColor: cat.cor + '25' }}>
+                      {cat.icone}
+                    </div>
+                  ) : (
+                    <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
+                      <span className="text-sm">📋</span>
+                    </div>
+                  )}
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <p className={`text-sm font-medium truncate ${expense.status === 'PAGO' ? 'text-gray-500' : 'text-gray-900'}`}>
+                        {expense.descricao}
+                      </p>
+                      {expense.recorrente && <Repeat2 size={11} className="text-primary-400 shrink-0" />}
+                    </div>
+                    {cat && <p className="text-xs text-gray-400 truncate">{cat.nome}</p>}
+                  </div>
+
+                  {/* Value + status */}
+                  <div className="text-right shrink-0 mr-1">
+                    <p className={`text-sm font-bold ${overdue ? 'text-red-600' : expense.status === 'PAGO' ? 'text-green-600' : 'text-gray-800'}`}>
+                      {formatCurrency(expense.valor)}
+                    </p>
+                    <Badge variant={expense.status === 'PAGO' ? 'green' : overdue ? 'red' : 'yellow'} className="mt-0.5">
+                      {expense.status === 'PAGO' ? 'Pago' : overdue ? 'Vencido' : 'Pendente'}
+                    </Badge>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {expense.status === 'PENDENTE' && (
+                      <>
+                        <button
+                          onClick={() => handlePlannedPay(expense.id)}
+                          className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                          title="Marcar como pago"
+                        >
+                          <CheckCircle2 size={15} />
+                        </button>
+                        <button
+                          onClick={() => handlePlannedCancel(expense.id)}
+                          className="p-1.5 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-colors"
+                          title="Cancelar"
+                        >
+                          <XCircle size={14} />
+                        </button>
+                      </>
+                    )}
+                    {expense.status === 'PAGO' && (
+                      <button
+                        onClick={() => handlePlannedRevert(expense.id)}
+                        className="p-1.5 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                        title="Reverter para pendente"
+                      >
+                        <RotateCcw size={14} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+
+            {plannedExpenses.length > 6 && (
+              <div className="px-5 py-3 text-center">
+                <Link to="/gastos" className="text-xs text-primary-600 hover:underline">
+                  + {plannedExpenses.length - 6} gasto{plannedExpenses.length - 6 > 1 ? 's' : ''} — ver todos
+                </Link>
+              </div>
+            )}
+          </div>
+        )}
+      </Card>
     </div>
   )
 }

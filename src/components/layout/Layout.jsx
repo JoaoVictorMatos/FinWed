@@ -1,12 +1,42 @@
+import { useState } from 'react'
 import Sidebar from './Sidebar'
 import BottomNav from './BottomNav'
 import MobileHeader from './MobileHeader'
 import { useInactivityTimer } from '../../hooks/useInactivityTimer'
-import { Clock, X } from 'lucide-react'
+import { useAuthStore } from '../../store/useAuthStore'
+import { Clock, X, Heart } from 'lucide-react'
 import Button from '../ui/Button'
 
 function InviteBanner() {
-  return null
+  const { pendingInvite, acceptInvite, rejectInvite } = useAuthStore()
+  const [loading, setLoading] = useState(false)
+
+  if (!pendingInvite) return null
+
+  const handleAccept = () => {
+    setLoading(true)
+    try { acceptInvite() } catch (e) { console.error(e) } finally { setLoading(false) }
+  }
+
+  return (
+    <div className="bg-primary-50 border-b border-primary-200 px-4 py-3 flex items-center gap-3 flex-wrap">
+      <Heart size={15} className="text-primary-600 shrink-0" fill="currentColor" />
+      <p className="flex-1 text-sm text-primary-800 min-w-0">
+        <strong>{pendingInvite.remetenteNome}</strong> te convidou para gerenciar as finanças juntos!
+      </p>
+      <div className="flex gap-2 shrink-0">
+        <button
+          onClick={rejectInvite}
+          className="text-xs text-gray-500 hover:text-gray-700 px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+        >
+          Recusar
+        </button>
+        <Button size="sm" onClick={handleAccept} disabled={loading}>
+          {loading ? '...' : 'Aceitar convite'}
+        </Button>
+      </div>
+    </div>
+  )
 }
 
 function InactivityWarning({ onKeepAlive, onDismiss }) {

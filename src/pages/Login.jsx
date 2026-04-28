@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { Heart, Clock } from 'lucide-react'
-import { useAuthStore } from '../store/useAuthStore'
+import { useAuthStore, hashPassword } from '../store/useAuthStore'
 import Input from '../components/ui/Input'
 import Button from '../components/ui/Button'
 import Modal from '../components/ui/Modal'
@@ -13,9 +13,16 @@ export default function Login() {
   const [form, setForm] = useState({ email: '', senha: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  // Recover modal state
   const [recoverModal, setRecoverModal] = useState(false)
+  const [recoverStep, setRecoverStep] = useState('email') // 'email' | 'reset'
   const [recoverEmail, setRecoverEmail] = useState('')
-  const [recoverResult, setRecoverResult] = useState(null)
+  const [recoverError, setRecoverError] = useState('')
+  const [newPwd, setNewPwd] = useState('')
+  const [confirmPwd, setConfirmPwd] = useState('')
+  const [resetLoading, setResetLoading] = useState(false)
+  const [resetDone, setResetDone] = useState(false)
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }))
 
@@ -24,7 +31,7 @@ export default function Login() {
     setError('')
     setLoading(true)
     try {
-      login(form.email, form.senha)
+      await login(form.email, form.senha)
       navigate('/')
     } catch (err) {
       setError(err.message)
@@ -33,16 +40,40 @@ export default function Login() {
     }
   }
 
-  const handleRecover = (e) => {
+  const openRecoverModal = () => {
+    setRecoverStep('email')
+    setRecoverEmail(form.email)
+    setRecoverError('')
+    setNewPwd('')
+    setConfirmPwd('')
+    setResetDone(false)
+    setRecoverModal(true)
+  }
+
+  const handleFindUser = (e) => {
     e.preventDefault()
     const users = JSON.parse(localStorage.getItem('finwed_users') || '[]')
-    const found = users.find((u) => u.email === recoverEmail)
+    const found = users.find((u) => u.email === recoverEmail.trim())
     if (found) {
-      setRecoverResult({ success: true, message: `Sua senha é: ${found.senha}` })
-      setForm((f) => ({ ...f, email: found.email, senha: found.senha }))
+      setRecoverStep('reset')
+      setRecoverError('')
     } else {
-      setRecoverResult({ success: false, message: 'E-mail não encontrado no sistema.' })
+      setRecoverError('E-mail não encontrado no sistema.')
     }
+  }
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault()
+    if (newPwd.length < 8)         { setRecoverError('Mínimo de 8 caracteres.'); return }
+    if (newPwd !== confirmPwd)      { setRecoverError('As senhas não conferem.'); return }
+    setResetLoading(true)
+    const hash  = await hashPassword(newPwd)
+    const users = JSON.parse(localStorage.getItem('finwed_users') || '[]')
+    const updated = users.map((u) => u.email === recoverEmail.trim() ? { ...u, senha: hash } : u)
+    localStorage.setItem('finwed_users', JSON.stringify(updated))
+    setForm({ email: recoverEmail.trim(), senha: newPwd })
+    setResetDone(true)
+    setResetLoading(false)
   }
 
   return (
@@ -67,29 +98,14 @@ export default function Login() {
         <p className="text-sm text-gray-500 mb-6">Entre na sua conta para continuar</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <Input
-            label="E-mail"
-            type="email"
-            placeholder="seu@email.com"
-            value={form.email}
-            onChange={set('email')}
-            required
-          />
+          <Input label="E-mail" type="email" placeholder="seu@email.com"
+            value={form.email} onChange={set('email')} required />
           <div>
-            <Input
-              label="Senha"
-              type="password"
-              placeholder="••••••••"
-              value={form.senha}
-              onChange={set('senha')}
-              required
-            />
+            <Input label="Senha" type="password" placeholder="••••••••"
+              value={form.senha} onChange={set('senha')} required />
             <div className="flex justify-end mt-1">
-              <button 
-                type="button" 
-                onClick={() => { setRecoverModal(true); setRecoverResult(null); setRecoverEmail(form.email) }} 
-                className="text-xs text-primary-600 hover:underline"
-              >
+              <button type="button" onClick={openRecoverModal}
+                className="text-xs text-primary-600 hover:underline">
                 Esqueci a senha
               </button>
             </div>
@@ -113,36 +129,51 @@ export default function Login() {
           </Link>
         </p>
 
-        {/* Demo hint */}
         <div className="mt-6 p-3 bg-gray-50 rounded-lg text-xs text-gray-500 text-center">
           <strong>Demo:</strong> cadastre-se para testar — os dados ficam no navegador.
         </div>
       </div>
 
-      <Modal open={recoverModal} onClose={() => setRecoverModal(false)} title="Recuperar senha">
-        <form onSubmit={handleRecover} className="space-y-4">
-          <p className="text-sm text-gray-600">Como esta é uma versão demo (local), insira seu e-mail para exibir a senha salva no navegador.</p>
-          <Input 
-            label="E-mail cadastrado" 
-            type="email" 
-            placeholder="seu@email.com" 
-            value={recoverEmail} 
-            onChange={(e) => setRecoverEmail(e.target.value)} 
-            required 
-          />
-          {recoverResult && (
-            <div className={`p-3 rounded-lg text-sm ${recoverResult.success ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
-              {recoverResult.success && <strong>Senha encontrada: </strong>}
-              {recoverResult.message}
+      {/* Recover password modal */}
+      <Modal open={recoverModal} onClose={() => setRecoverModal(false)} title="Redefinir senha">
+        {resetDone ? (
+          <div className="space-y-4 text-center">
+            <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mx-auto">
+              <span className="text-2xl">✓</span>
             </div>
-          )}
-          <div className="flex gap-3 pt-2">
-            <Button type="button" variant="secondary" onClick={() => setRecoverModal(false)} className="flex-1">
-              {recoverResult?.success ? 'Fechar' : 'Cancelar'}
-            </Button>
-            {!recoverResult?.success && <Button type="submit" className="flex-1">Buscar senha</Button>}
+            <p className="text-sm text-gray-700 font-medium">Senha redefinida com sucesso!</p>
+            <p className="text-xs text-gray-500">O formulário de login já foi preenchido. Clique em Entrar.</p>
+            <Button className="w-full" onClick={() => setRecoverModal(false)}>Fechar</Button>
           </div>
-        </form>
+        ) : recoverStep === 'email' ? (
+          <form onSubmit={handleFindUser} className="space-y-4">
+            <p className="text-sm text-gray-600">Informe seu e-mail para redefinir a senha.</p>
+            <Input label="E-mail cadastrado" type="email" placeholder="seu@email.com"
+              value={recoverEmail} onChange={(e) => setRecoverEmail(e.target.value)} required />
+            {recoverError && <p className="text-xs text-red-500">{recoverError}</p>}
+            <div className="flex gap-3 pt-2">
+              <Button type="button" variant="secondary" onClick={() => setRecoverModal(false)} className="flex-1">Cancelar</Button>
+              <Button type="submit" className="flex-1">Continuar</Button>
+            </div>
+          </form>
+        ) : (
+          <form onSubmit={handleResetPassword} className="space-y-4">
+            <p className="text-sm text-gray-600">
+              Conta encontrada. Defina uma nova senha para <strong>{recoverEmail}</strong>.
+            </p>
+            <Input label="Nova senha" type="password" placeholder="Mínimo 8 caracteres"
+              value={newPwd} onChange={(e) => setNewPwd(e.target.value)} required />
+            <Input label="Confirmar nova senha" type="password" placeholder="Repita a senha"
+              value={confirmPwd} onChange={(e) => setConfirmPwd(e.target.value)} required />
+            {recoverError && <p className="text-xs text-red-500">{recoverError}</p>}
+            <div className="flex gap-3 pt-2">
+              <Button type="button" variant="secondary" onClick={() => setRecoverStep('email')} className="flex-1">Voltar</Button>
+              <Button type="submit" className="flex-1" disabled={resetLoading}>
+                {resetLoading ? 'Salvando...' : 'Redefinir senha'}
+              </Button>
+            </div>
+          </form>
+        )}
       </Modal>
     </div>
   )

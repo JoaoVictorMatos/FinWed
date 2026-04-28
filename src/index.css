@@ -40,3 +40,10 @@
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { @apply bg-gray-300 rounded-full; }
 ::-webkit-scrollbar-thumb:hover { @apply bg-gray-400; }
+
+/* Hide scrollbar but keep scroll functionality */
+.scrollbar-none { scrollbar-width: none; -ms-overflow-style: none; }
+.scrollbar-none::-webkit-scrollbar { display: none; }
+
+/* iOS safe area bottom padding (home indicator) */
+.pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
