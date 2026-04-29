@@ -232,8 +232,7 @@ export default function Register() {
           </p>
         </div>
       </div>
-      
-      <Footer theme="dark" />
+      <Footer theme="light" />
 
       <TermsModal open={termosOpen} onClose={() => setTermosOpen(false)} />
     </div>

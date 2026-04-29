@@ -136,8 +136,7 @@ export default function Login() {
           </div>
         </div>
       </div>
-      
-      <Footer theme="dark" />
+      <Footer theme="light" />
 
       {/* Recover password modal */}
       <Modal open={recoverModal} onClose={() => setRecoverModal(false)} title="Redefinir senha">
