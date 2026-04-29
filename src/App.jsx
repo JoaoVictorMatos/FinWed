@@ -13,14 +13,32 @@ import Categories from './pages/Categories'
 import PlannedExpenses from './pages/PlannedExpenses'
 import ErrorPage from './pages/ErrorPage'
 
+import { useEffect } from 'react'
+
 function PrivateRoute({ children }) {
   const user = useAuthStore((s) => s.user)
-  if (!user) return <Navigate to="/login" replace />
+  const autoLoginDev = useAuthStore((s) => s.autoLoginDev)
+
+  useEffect(() => {
+    if (!user) {
+      autoLoginDev()
+    }
+  }, [user, autoLoginDev])
+
+  if (!user) return null // Wait for auto login
   return <Layout>{children}</Layout>
 }
 
 function PublicRoute({ children }) {
   const user = useAuthStore((s) => s.user)
+  const autoLoginDev = useAuthStore((s) => s.autoLoginDev)
+
+  useEffect(() => {
+    if (!user) {
+      autoLoginDev()
+    }
+  }, [user, autoLoginDev])
+
   if (user) return <Navigate to="/" replace />
   return children
 }

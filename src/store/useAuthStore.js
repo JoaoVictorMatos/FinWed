@@ -158,6 +158,30 @@ export const useAuthStore = create(
         ))
         set({ user: { ...user, casalId: null }, casal: null, partner: null })
       },
+
+      autoLoginDev: () => {
+        const users = getUsers()
+        let user = users[0]
+        if (!user) {
+          user = {
+            id: uuidv4(), nome: 'Usuário Local', email: 'local@local.com',
+            senha: 'bypass_login', avatarUrl: '', casalId: null, criadoEm: new Date().toISOString()
+          }
+          saveUsers([user])
+        }
+
+        let casal = null
+        let partner = null
+        if (user.casalId) {
+          const couples = getCouples()
+          casal = couples.find((c) => c.id === user.casalId) || null
+          if (casal) {
+            const partnerId = casal.parceiroA === user.id ? casal.parceiroB : casal.parceiroA
+            partner = users.find((u) => u.id === partnerId) || null
+          }
+        }
+        set({ user, casal, partner, pendingInvite: null })
+      },
     }),
     { name: 'finwed_session', partialize: (s) => ({ user: s.user, casal: s.casal, partner: s.partner }) }
   )
