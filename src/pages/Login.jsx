@@ -5,6 +5,7 @@ import { useAuthStore, hashPassword } from '../store/useAuthStore'
 import Input from '../components/ui/Input'
 import Button from '../components/ui/Button'
 import Modal from '../components/ui/Modal'
+import Footer from '../components/layout/Footer'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -77,62 +78,66 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-600 to-primary-800 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
-        {/* Logo */}
-        <div className="flex items-center justify-center gap-3 mb-8">
-          <div className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center">
-            <Heart size={20} className="text-white" fill="white" />
-          </div>
-          <span className="text-2xl font-bold text-gray-900">FinWed</span>
-        </div>
-
-        {locationState?.expired && (
-          <div className="flex items-center gap-2 bg-yellow-50 border border-yellow-200 rounded-xl px-3 py-2.5 mb-5 text-sm text-yellow-800">
-            <Clock size={15} className="shrink-0 text-yellow-600" />
-            Sessão encerrada por inatividade. Faça login novamente.
-          </div>
-        )}
-
-        <h1 className="text-xl font-semibold text-gray-900 mb-1">Bem-vindo de volta</h1>
-        <p className="text-sm text-gray-500 mb-6">Entre na sua conta para continuar</p>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Input label="E-mail" type="email" placeholder="seu@email.com"
-            value={form.email} onChange={set('email')} required />
-          <div>
-            <Input label="Senha" type="password" placeholder="••••••••"
-              value={form.senha} onChange={set('senha')} required />
-            <div className="flex justify-end mt-1">
-              <button type="button" onClick={openRecoverModal}
-                className="text-xs text-primary-600 hover:underline">
-                Esqueci a senha
-              </button>
+    <div className="min-h-screen bg-gradient-to-br from-primary-600 to-primary-800 flex flex-col items-center justify-center p-4">
+      <div className="flex-1 flex flex-col justify-center w-full max-w-md">
+        <div className="bg-white rounded-2xl shadow-2xl w-full p-8">
+          {/* Logo */}
+          <div className="flex items-center justify-center gap-3 mb-8">
+            <div className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center">
+              <Heart size={20} className="text-white" fill="white" />
             </div>
+            <span className="text-2xl font-bold text-gray-900">FinWed</span>
           </div>
 
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-sm text-red-600">
-              {error}
+          {locationState?.expired && (
+            <div className="flex items-center gap-2 bg-yellow-50 border border-yellow-200 rounded-xl px-3 py-2.5 mb-5 text-sm text-yellow-800">
+              <Clock size={15} className="shrink-0 text-yellow-600" />
+              Sessão encerrada por inatividade. Faça login novamente.
             </div>
           )}
 
-          <Button type="submit" className="w-full" size="lg" disabled={loading}>
-            {loading ? 'Entrando...' : 'Entrar'}
-          </Button>
-        </form>
+          <h1 className="text-xl font-semibold text-gray-900 mb-1">Bem-vindo de volta</h1>
+          <p className="text-sm text-gray-500 mb-6">Entre na sua conta para continuar</p>
 
-        <p className="text-center text-sm text-gray-500 mt-6">
-          Não tem conta?{' '}
-          <Link to="/cadastro" className="text-primary-600 font-medium hover:underline">
-            Criar conta
-          </Link>
-        </p>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Input label="E-mail" type="email" placeholder="seu@email.com"
+              value={form.email} onChange={set('email')} required />
+            <div>
+              <Input label="Senha" type="password" placeholder="••••••••"
+                value={form.senha} onChange={set('senha')} required />
+              <div className="flex justify-end mt-1">
+                <button type="button" onClick={openRecoverModal}
+                  className="text-xs text-primary-600 hover:underline">
+                  Esqueci a senha
+                </button>
+              </div>
+            </div>
 
-        <div className="mt-6 p-3 bg-gray-50 rounded-lg text-xs text-gray-500 text-center">
-          <strong>Demo:</strong> cadastre-se para testar — os dados ficam no navegador.
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-sm text-red-600">
+                {error}
+              </div>
+            )}
+
+            <Button type="submit" className="w-full" size="lg" disabled={loading}>
+              {loading ? 'Entrando...' : 'Entrar'}
+            </Button>
+          </form>
+
+          <p className="text-center text-sm text-gray-500 mt-6">
+            Não tem conta?{' '}
+            <Link to="/cadastro" className="text-primary-600 font-medium hover:underline">
+              Criar conta
+            </Link>
+          </p>
+
+          <div className="mt-6 p-3 bg-gray-50 rounded-lg text-xs text-gray-500 text-center">
+            <strong>Demo:</strong> cadastre-se para testar — os dados ficam no navegador.
+          </div>
         </div>
       </div>
+      
+      <Footer theme="dark" />
 
       {/* Recover password modal */}
       <Modal open={recoverModal} onClose={() => setRecoverModal(false)} title="Redefinir senha">

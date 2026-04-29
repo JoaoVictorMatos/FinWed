@@ -2,6 +2,7 @@ import { useState } from 'react'
 import Sidebar from './Sidebar'
 import BottomNav from './BottomNav'
 import MobileHeader from './MobileHeader'
+import Footer from './Footer'
 import { useInactivityTimer } from '../../hooks/useInactivityTimer'
 import { useAuthStore } from '../../store/useAuthStore'
 import { Clock, X, Heart } from 'lucide-react'
@@ -42,21 +43,21 @@ function InviteBanner() {
 function InactivityWarning({ onKeepAlive, onDismiss }) {
   return (
     <div className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-[150] w-[calc(100%-2rem)] max-w-sm">
-      <div className="bg-gray-900 text-white rounded-2xl shadow-2xl px-4 py-3 flex items-center gap-3">
+      <div className="bg-white rounded-2xl shadow-2xl px-4 py-3 flex items-center gap-3">
         <div className="w-8 h-8 rounded-full bg-yellow-500/20 flex items-center justify-center shrink-0">
-          <Clock size={15} className="text-yellow-400" />
+          <Clock size={15} className="text-yellow-500" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium leading-tight">Sessão expira em 5 min</p>
-          <p className="text-xs text-gray-400 mt-0.5">Inatividade detectada</p>
+          <p className="text-xs text-gray-500 mt-0.5">Inatividade detectada</p>
         </div>
         <div className="flex items-center gap-1 shrink-0">
           <Button size="sm" onClick={onKeepAlive}
-            className="!bg-yellow-500 !text-gray-900 hover:!bg-yellow-400 !px-3 !py-1 text-xs font-semibold">
+            className="!bg-yellow-500 !text-white hover:!bg-yellow-400 !px-3 !py-1 text-xs font-semibold">
             Continuar
           </Button>
           <button onClick={onDismiss}
-            className="p-1 text-gray-400 hover:text-white rounded-lg transition-colors">
+            className="p-1 text-gray-400 hover:text-gray-600 rounded-lg transition-colors">
             <X size={14} />
           </button>
         </div>
@@ -74,8 +75,11 @@ export default function Layout({ children }) {
       <div className="flex-1 flex flex-col min-w-0 md:pb-0 pb-16 md:ml-60 overflow-x-hidden">
         <MobileHeader />
         <InviteBanner />
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto overflow-x-hidden">
-          {children}
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto overflow-x-hidden flex flex-col">
+          <div className="flex-1">
+            {children}
+          </div>
+          <Footer theme="light" />
         </main>
         <BottomNav />
       </div>
