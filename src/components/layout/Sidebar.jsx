@@ -16,7 +16,7 @@ export default function Sidebar() {
   const { user, partner, logout } = useAuthStore()
 
   return (
-    <aside className="hidden md:flex w-60 shrink-0 bg-white border-r border-gray-100 flex-col h-screen sticky top-0">
+    <aside className="hidden md:flex w-60 bg-white border-r border-gray-100 flex-col fixed inset-y-0 left-0 z-40">
       {/* Logo */}
       <div className="px-5 py-5 border-b border-gray-100">
         <div className="flex items-center gap-2">

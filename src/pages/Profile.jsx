@@ -85,101 +85,21 @@ function ProfileSection() {
 }
 
 function CoupleSection() {
-  const { user, casal, partner, sendInvite, dissolveCouple } = useAuthStore()
-  const { confirm, dialog } = useConfirm()
-  const [inviteEmail, setInviteEmail] = useState('')
-  const [inviteStatus, setInviteStatus] = useState(null) // { type, msg }
-
-  const handleSendInvite = (e) => {
-    e.preventDefault()
-    try {
-      sendInvite(inviteEmail.trim())
-      setInviteStatus({
-        type: 'success',
-        msg: `Convite registrado para ${inviteEmail.trim()}. Quando essa pessoa fizer login no FinWed neste dispositivo, o convite aparecerá automaticamente.`,
-      })
-      setInviteEmail('')
-    } catch (err) {
-      setInviteStatus({ type: 'error', msg: err.message })
-    }
-  }
-
-  const handleDissolve = async () => {
-    const ok = await confirm(
-      'Desvincular o casal? As finanças pessoais de cada um serão mantidas, mas os dados compartilhados não serão excluídos.',
-      'Desvincular'
-    )
-    if (ok) dissolveCouple()
-  }
-
-  if (casal && partner) {
-    return (
-      <Card className="p-6">
-        <div className="flex items-center gap-3 mb-5">
-          <Heart size={18} className="text-primary-600" />
-          <h2 className="font-semibold text-gray-900">Gestão do casal</h2>
-        </div>
-
-        <div className="flex items-center gap-4 p-4 bg-primary-50 border border-primary-100 rounded-xl mb-5">
-          <div className="w-10 h-10 rounded-full bg-primary-200 flex items-center justify-center text-primary-700 font-bold text-lg shrink-0">
-            {partner.avatarUrl
-              ? <img src={partner.avatarUrl} alt="" className="w-full h-full rounded-full object-cover" />
-              : partner.nome?.[0]?.toUpperCase()
-            }
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="font-semibold text-gray-900 truncate">{partner.nome}</p>
-            <p className="text-xs text-gray-500 truncate">{partner.email}</p>
-          </div>
-          <Badge variant="green">Vinculado</Badge>
-        </div>
-
-        <button
-          onClick={handleDissolve}
-          className="flex items-center gap-1.5 text-sm text-red-500 hover:text-red-600 transition-colors"
-        >
-          <UserMinus size={14} /> Desvincular casal
-        </button>
-        {dialog}
-      </Card>
-    )
-  }
-
   return (
-    <Card className="p-6">
+    <Card className="p-6 opacity-75">
       <div className="flex items-center gap-3 mb-2">
-        <Heart size={18} className="text-primary-600" />
+        <Heart size={18} className="text-gray-400" />
         <h2 className="font-semibold text-gray-900">Gestão do casal</h2>
+        <Badge variant="blue" className="ml-auto text-[10px] uppercase tracking-wider font-bold">Atualização Futura</Badge>
       </div>
       <p className="text-sm text-gray-500 mb-5">
-        Vincule-se ao seu parceiro(a) para compartilhar finanças e metas.
+        O compartilhamento de finanças em tempo real entre dois dispositivos requer um banco de dados em nuvem. Esta funcionalidade estará disponível em uma atualização futura!
       </p>
 
-      <form onSubmit={handleSendInvite} className="space-y-3 max-w-sm">
-        <Input
-          label="E-mail do parceiro(a)"
-          type="email"
-          placeholder="parceiro@email.com"
-          value={inviteEmail}
-          onChange={(e) => { setInviteEmail(e.target.value); setInviteStatus(null) }}
-          required
-        />
-        {inviteStatus && (
-          <div className={`p-3 rounded-lg text-xs leading-relaxed border
-            ${inviteStatus.type === 'success'
-              ? 'bg-green-50 text-green-700 border-green-200'
-              : 'bg-red-50 text-red-700 border-red-200'
-            }`}>
-            {inviteStatus.msg}
-          </div>
-        )}
-        <Button type="submit" size="sm">
-          <UserPlus size={14} /> Enviar convite
-        </Button>
-      </form>
-
-      <div className="mt-5 p-3 bg-gray-50 border border-gray-100 rounded-xl text-xs text-gray-500 leading-relaxed">
-        <strong className="text-gray-700">Como funciona:</strong> o convite fica registrado no dispositivo. Quando seu parceiro(a) fizer login ou se cadastrar com o e-mail informado, um banner de aceite aparecerá automaticamente.
+      <div className="p-4 bg-gray-50 border border-gray-100 rounded-xl text-center">
+        <p className="text-sm text-gray-500 font-medium">
+          Atualmente, o FinWed funciona 100% offline armazenando os dados apenas no seu dispositivo.
+        </p>
       </div>
     </Card>
   )
