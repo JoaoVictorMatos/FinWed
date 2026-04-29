@@ -233,33 +233,38 @@ export default function Transactions() {
               const cat = categories.find((c) => c.id === t.categoriaId)
               const isOwn = t.criadoPor === user?.id
               return (
-                <li key={t.id} className="flex items-center gap-4 px-5 py-3 hover:bg-gray-50 transition-colors group">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0"
-                    style={{ backgroundColor: cat?.cor + '20' }}>
-                    {cat?.icone || '📦'}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">{t.descricao || cat?.nome || 'Sem descrição'}</p>
-                    <div className="flex items-center flex-wrap gap-2 mt-0.5">
-                      <span className="text-xs text-gray-400">{t.dataTransacao?.split('-').reverse().join('/')}</span>
-                      <Badge variant={t.escopo === 'COMPARTILHADA' ? 'blue' : 'gray'}>
-                        {t.escopo === 'COMPARTILHADA' ? '👫 Compartilhada' : '👤 Pessoal'}
-                      </Badge>
-                      {cat && <Badge variant="gray">{cat.nome}</Badge>}
+                <li key={t.id} className="flex flex-col sm:flex-row sm:items-center gap-y-3 px-4 py-3.5 hover:bg-gray-50 transition-colors group">
+                  {/* Container superior (Ícone, Info, Valor) */}
+                  <div className="flex items-center gap-3 w-full sm:flex-1 min-w-0">
+                    <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center text-base sm:text-lg shrink-0"
+                      style={{ backgroundColor: cat?.cor + '20' }}>
+                      {cat?.icone || '📦'}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">{t.descricao || cat?.nome || 'Sem descrição'}</p>
+                      <div className="flex items-center flex-wrap gap-1.5 mt-0.5">
+                        <span className="text-[10px] sm:text-xs text-gray-400">{t.dataTransacao?.split('-').reverse().join('/')}</span>
+                        <Badge variant={t.escopo === 'COMPARTILHADA' ? 'blue' : 'gray'} className="text-[9px] sm:text-[10px]">
+                          {t.escopo === 'COMPARTILHADA' ? '👫 Comp' : '👤 Pessoal'}
+                        </Badge>
+                        {cat && <Badge variant="gray" className="text-[9px] sm:text-[10px]">{cat.nome}</Badge>}
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end shrink-0 ml-1">
+                      <span className={`text-sm sm:text-base font-bold ${t.tipo === 'RECEITA' ? 'text-green-600' : 'text-red-600'}`}>
+                        {t.tipo === 'RECEITA' ? '+' : '-'}{formatCurrency(t.valor)}
+                      </span>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end shrink-0 ml-2">
-                    <span className={`text-base font-bold ${t.tipo === 'RECEITA' ? 'text-green-600' : 'text-red-600'}`}>
-                      {t.tipo === 'RECEITA' ? '+' : '-'}{formatCurrency(t.valor)}
-                    </span>
-                  </div>
+
+                  {/* Actions Toolbar on Mobile / Hover on Desktop */}
                   {isOwn && (
-                    <div className="flex gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity mt-2 sm:mt-0">
-                      <button onClick={() => openEdit(t)} className="p-1.5 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors">
-                        <Pencil size={14} />
+                    <div className="flex items-center justify-end gap-1.5 sm:opacity-0 group-hover:opacity-100 transition-opacity border-t border-gray-100/60 sm:border-0 pt-2.5 sm:pt-0 shrink-0">
+                      <button onClick={() => openEdit(t)} className="p-1.5 flex-1 sm:flex-none flex justify-center text-gray-500 hover:text-primary-600 bg-gray-50 sm:bg-transparent hover:bg-primary-50 rounded-lg transition-colors">
+                        <Pencil size={15} className="sm:w-[14px] sm:h-[14px]" />
                       </button>
-                      <button onClick={() => handleDelete(t.id)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-                        <Trash2 size={14} />
+                      <button onClick={() => handleDelete(t.id)} className="p-1.5 flex-1 sm:flex-none flex justify-center text-gray-500 hover:text-red-600 bg-gray-50 sm:bg-transparent hover:bg-red-50 rounded-lg transition-colors">
+                        <Trash2 size={15} className="sm:w-[14px] sm:h-[14px]" />
                       </button>
                     </div>
                   )}

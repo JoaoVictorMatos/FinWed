@@ -203,96 +203,99 @@ function ExpenseRow({ expense, category, onPay, onRevert, onCancel, onEdit, onDe
   const dayMonth = `${parts[2]}/${parts[1]}`
 
   return (
-    <div className={`flex items-center gap-3 px-4 py-3.5 group transition-colors
+    <div className={`flex flex-col sm:flex-row sm:items-center gap-y-3 px-4 py-3.5 group transition-colors
       ${overdue ? 'bg-red-50/60 hover:bg-red-50' : 'hover:bg-gray-50'}
       ${expense.status === 'CANCELADO' ? 'opacity-50' : ''}`}>
 
-      {/* Date pill */}
-      <div className={`w-11 shrink-0 text-center rounded-lg py-1.5
-        ${overdue ? 'bg-red-100' : expense.status === 'PAGO' ? 'bg-green-100' : 'bg-gray-100'}`}>
-        <p className={`text-xs font-bold leading-tight
-          ${overdue ? 'text-red-700' : expense.status === 'PAGO' ? 'text-green-700' : 'text-gray-700'}`}>
-          {dayMonth.split('/')[0]}
-        </p>
-        <p className={`text-[10px] leading-tight
-          ${overdue ? 'text-red-500' : expense.status === 'PAGO' ? 'text-green-500' : 'text-gray-400'}`}>
-          {dayMonth.split('/')[1]}
-        </p>
-      </div>
-
-      {/* Category icon */}
-      {category ? (
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center text-base shrink-0"
-          style={{ backgroundColor: category.cor + '25' }}>
-          {category.icone}
-        </div>
-      ) : (
-        <div className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center shrink-0">
-          <span className="text-base">📋</span>
-        </div>
-      )}
-
-      {/* Info */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1.5">
-          <p className={`text-sm font-medium truncate ${expense.status === 'CANCELADO' ? 'line-through text-gray-400' : 'text-gray-900'}`}>
-            {expense.descricao}
+      {/* Top Section: Date, Icon, Info, Value */}
+      <div className="flex items-center gap-3 w-full sm:flex-1 min-w-0">
+        {/* Date pill */}
+        <div className={`w-10 sm:w-11 shrink-0 text-center rounded-lg py-1 sm:py-1.5
+          ${overdue ? 'bg-red-100' : expense.status === 'PAGO' ? 'bg-green-100' : 'bg-gray-100'}`}>
+          <p className={`text-[11px] sm:text-xs font-bold leading-tight
+            ${overdue ? 'text-red-700' : expense.status === 'PAGO' ? 'text-green-700' : 'text-gray-700'}`}>
+            {dayMonth.split('/')[0]}
           </p>
-          {expense.recorrente && (
-            <Repeat2 size={11} className="text-primary-400 shrink-0" title="Gasto recorrente" />
-          )}
+          <p className={`text-[9px] sm:text-[10px] leading-tight
+            ${overdue ? 'text-red-500' : expense.status === 'PAGO' ? 'text-green-500' : 'text-gray-400'}`}>
+            {dayMonth.split('/')[1]}
+          </p>
         </div>
-        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-          {category && <span className="text-xs text-gray-400">{category.nome}</span>}
-          {expense.observacao && (
-            <>
-              {category && <span className="text-gray-300 text-xs">·</span>}
-              <span className="text-xs text-gray-400 truncate max-w-[120px]">{expense.observacao}</span>
-            </>
-          )}
+
+        {/* Category icon */}
+        {category ? (
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center text-sm sm:text-base shrink-0"
+            style={{ backgroundColor: category.cor + '25' }}>
+            {category.icone}
+          </div>
+        ) : (
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gray-100 flex items-center justify-center shrink-0">
+            <span className="text-sm sm:text-base">📋</span>
+          </div>
+        )}
+
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5">
+            <p className={`text-sm font-medium truncate ${expense.status === 'CANCELADO' ? 'line-through text-gray-400' : 'text-gray-900'}`}>
+              {expense.descricao}
+            </p>
+            {expense.recorrente && (
+              <Repeat2 size={11} className="text-primary-400 shrink-0" title="Gasto recorrente" />
+            )}
+          </div>
+          <div className="flex items-center gap-1 sm:gap-2 mt-0.5">
+            {category && <span className="text-[10px] sm:text-xs text-gray-400 truncate">{category.nome}</span>}
+            {expense.observacao && (
+              <>
+                {category && <span className="text-gray-300 text-xs hidden sm:inline">·</span>}
+                <span className="text-[10px] sm:text-xs text-gray-400 truncate max-w-[120px]">{expense.observacao}</span>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Value + status */}
+        <div className="text-right shrink-0 ml-1">
+          <p className={`text-sm font-bold ${overdue ? 'text-red-600' : expense.status === 'PAGO' ? 'text-green-600' : 'text-gray-800'}`}>
+            {formatCurrency(expense.valor)}
+          </p>
+          <Badge variant={variant} className="mt-0.5 text-[9px] sm:text-[10px]">{label}</Badge>
         </div>
       </div>
 
-      {/* Value + status */}
-      <div className="text-right shrink-0">
-        <p className={`text-sm font-bold ${overdue ? 'text-red-600' : expense.status === 'PAGO' ? 'text-green-600' : 'text-gray-800'}`}>
-          {formatCurrency(expense.valor)}
-        </p>
-        <Badge variant={variant} className="mt-0.5">{label}</Badge>
-      </div>
-
-      {/* Actions */}
-      <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+      {/* Actions Toolbar on Mobile / Hover on Desktop */}
+      <div className="flex items-center justify-end gap-1.5 sm:opacity-0 group-hover:opacity-100 transition-opacity border-t border-gray-100/60 sm:border-0 pt-2.5 sm:pt-0 shrink-0">
         {expense.status === 'PENDENTE' && (
           <>
             <button onClick={() => onPay(expense.id)}
-              className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+              className="p-1.5 flex-1 sm:flex-none flex justify-center text-gray-500 hover:text-green-600 bg-gray-50 sm:bg-transparent hover:bg-green-50 rounded-lg transition-colors"
               title="Marcar como pago">
-              <CheckCircle2 size={15} />
+              <CheckCircle2 size={16} className="sm:w-[15px] sm:h-[15px]" />
             </button>
             <button onClick={() => onEdit(expense)}
-              className="p-1.5 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+              className="p-1.5 flex-1 sm:flex-none flex justify-center text-gray-500 hover:text-primary-600 bg-gray-50 sm:bg-transparent hover:bg-primary-50 rounded-lg transition-colors"
               title="Editar">
-              <Pencil size={14} />
+              <Pencil size={15} className="sm:w-[14px] sm:h-[14px]" />
             </button>
             <button onClick={() => onCancel(expense.id)}
-              className="p-1.5 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-colors"
+              className="p-1.5 flex-1 sm:flex-none flex justify-center text-gray-500 hover:text-orange-500 bg-gray-50 sm:bg-transparent hover:bg-orange-50 rounded-lg transition-colors"
               title="Cancelar">
-              <XCircle size={14} />
+              <XCircle size={15} className="sm:w-[14px] sm:h-[14px]" />
             </button>
           </>
         )}
         {(expense.status === 'PAGO' || expense.status === 'CANCELADO') && (
           <button onClick={() => onRevert(expense.id)}
-            className="p-1.5 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+            className="p-1.5 flex-1 sm:flex-none flex justify-center text-gray-500 hover:text-primary-600 bg-gray-50 sm:bg-transparent hover:bg-primary-50 rounded-lg transition-colors"
             title="Reverter para pendente">
-            <RotateCcw size={14} />
+            <RotateCcw size={15} className="sm:w-[14px] sm:h-[14px]" />
           </button>
         )}
         <button onClick={() => onDelete(expense)}
-          className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+          className="p-1.5 flex-1 sm:flex-none flex justify-center text-gray-500 hover:text-red-500 bg-gray-50 sm:bg-transparent hover:bg-red-50 rounded-lg transition-colors"
           title="Excluir">
-          <Trash2 size={14} />
+          <Trash2 size={15} className="sm:w-[14px] sm:h-[14px]" />
         </button>
       </div>
     </div>
